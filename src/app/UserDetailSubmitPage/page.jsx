@@ -50,6 +50,8 @@ export default function StepperForm() {
   const validateStep2 = () => {
     const newErrors = {};
     if (!formData.standee_type) newErrors.standee_type = "Please select a standee type";
+    if (shouldShowIcons() && icons.length === 0) newErrors.icons = "Please select at least one icon";
+    if (icons.includes("UPI") && !upiQR) newErrors.upi_qr = "Please upload UPI QR code";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -74,6 +76,7 @@ export default function StepperForm() {
     } else {
       setIcons((prev) => prev.filter((icon) => icon !== value));
     }
+    setErrors((prev) => ({ ...prev, icons: null, upi_qr: null }));
   };
 
   const handleNext = () => {
