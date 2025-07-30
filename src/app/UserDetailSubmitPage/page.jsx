@@ -1,3 +1,4 @@
+// ✅ Updated StepperForm Component
 "use client";
 
 import { useState } from "react";
@@ -34,14 +35,18 @@ export default function StepperForm() {
   };
 
   const shouldShowIcons = () => {
-    return formData.standee_type && !["Business Card", "VCard"].includes(formData.standee_type);
+    return (
+      formData.standee_type &&
+      !["Business Card", "VCard"].includes(formData.standee_type)
+    );
   };
 
   const validateStep1 = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = "Name is required";
     if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
-    else if (!/^\d{10}$/.test(formData.phone.trim())) newErrors.phone = "Phone must be 10 digits";
+    else if (!/^\d{10}$/.test(formData.phone.trim()))
+      newErrors.phone = "Phone must be 10 digits";
     if (!logoFile) newErrors.logo = "Logo file is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -49,12 +54,16 @@ export default function StepperForm() {
 
   const validateStep2 = () => {
     const newErrors = {};
-    if (!formData.standee_type) newErrors.standee_type = "Please select a standee type";
+    if (!formData.standee_type)
+      newErrors.standee_type = "Please select a standee type";
     const iconLimit = getIconLimit();
     if (shouldShowIcons() && (!icons.length || icons.length < iconLimit)) {
-      newErrors.icons = `Please select ${iconLimit} icon${iconLimit > 1 ? "s" : ""}`;
+      newErrors.icons = `Please select ${iconLimit} icon${
+        iconLimit > 1 ? "s" : ""
+      }`;
     }
-    if (icons.includes("UPI") && !upiQR) newErrors.upi_qr = "Please upload UPI QR code";
+    if (icons.includes("UPI") && !upiQR)
+      newErrors.upi_qr = "Please upload UPI QR code";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -100,23 +109,36 @@ export default function StepperForm() {
     if (upiQR) form.append("upi_qr", upiQR);
 
     try {
-      const res = await fetch("/api/userDataSubmit", { method: "POST", body: form });
+      const res = await fetch("/api/userDataSubmit", {
+        method: "POST",
+        body: form,
+      });
       const json = await res.json();
       if (res.ok) {
         toast.success(json.message || "Form submitted successfully");
         setStep(0);
-        setFormData({ name: "", phone: "", address: "", standee_type: "", other_icons: "" });
+        setFormData({
+          name: "",
+          phone: "",
+          address: "",
+          standee_type: "",
+          other_icons: "",
+        });
         setIcons([]);
         setLogoFile(null);
         setUpiQR(null);
         setErrors({});
-      } else toast.error(json.message || "Submission failed");
+      } else {
+        toast.error(json.message || "Submission failed");
+      }
     } catch {
       toast.error("Network error");
     } finally {
       setLoading(false);
     }
   };
+
+  const isOtherIconsDisabled = getIconLimit() && icons.length >= getIconLimit();
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 p-4 flex items-center justify-center">
@@ -221,7 +243,17 @@ export default function StepperForm() {
                     {errors.upi_qr && <p className="text-red-500 text-sm">{errors.upi_qr}</p>}
                   </div>
                 )}
-                <input type="text" name="other_icons" value={formData.other_icons} placeholder="Other icons (optional)" className="border p-2 rounded w-full mt-2" onChange={handleChange} />
+                <input
+        type="text"
+        name="other_icons"
+        value={formData.other_icons}
+        placeholder="Other icons (optional)"
+        className={`border p-2 rounded w-full mt-2 ${
+          isOtherIconsDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+        }`}
+        onChange={handleChange}
+        disabled={isOtherIconsDisabled}
+      />
               </>
             )}
 
