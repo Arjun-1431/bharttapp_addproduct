@@ -123,7 +123,7 @@ export default function StepperForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 p-4 flex items-center justify-center">
       <div className="max-w-3xl w-full p-6 bg-white/70 backdrop-blur-md shadow-xl rounded-xl">
-        <h2 className="text-3xl font-bold text-center text-blue-800 mb-6">Apply For The Standee Design</h2>
+        <h2 className="text-3xl font-bold text-center text-blue-800 mb-6">Apply For The Standee Design.</h2>
 
         {/* Step Indicators */}
         <div className="flex justify-between mb-8">
