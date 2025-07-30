@@ -41,8 +41,7 @@ export default function StepperForm() {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = "Name is required";
     if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
-    else if (!/^\d{10}$/.test(formData.phone.trim()))
-      newErrors.phone = "Phone must be 10 digits";
+    else if (!/^\d{10}$/.test(formData.phone.trim())) newErrors.phone = "Phone must be 10 digits";
     if (!logoFile) newErrors.logo = "Logo file is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -56,24 +55,24 @@ export default function StepperForm() {
   };
 
   const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    setErrors((prev) => ({ ...prev, [e.target.name]: null }));
-    if (e.target.name === "standee_type") setIcons([]);
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: null }));
+    if (name === "standee_type") setIcons([]);
   };
 
   const handleIconChange = (e) => {
-    const value = e.target.value;
-    const isChecked = e.target.checked;
+    const { value, checked } = e.target;
     const iconLimit = getIconLimit();
 
-    if (isChecked) {
+    if (checked) {
       if (iconLimit && icons.length >= iconLimit) {
         toast.warn(`You can select up to ${iconLimit} icon(s) only.`);
         return;
       }
       setIcons((prev) => [...prev, value]);
     } else {
-      setIcons((prev) => prev.filter((i) => i !== value));
+      setIcons((prev) => prev.filter((icon) => icon !== value));
     }
   };
 
@@ -91,7 +90,7 @@ export default function StepperForm() {
     if (!validateStep2()) return;
 
     const form = new FormData();
-    Object.entries(formData).forEach(([key, val]) => form.append(key, val));
+    Object.entries(formData).forEach(([key, value]) => form.append(key, value));
     form.append("icons_selected", icons.join(","));
     form.append("logo", logoFile);
     if (upiQR) form.append("upi_qr", upiQR);
@@ -103,11 +102,13 @@ export default function StepperForm() {
       });
       const json = await res.json();
       if (res.ok) {
-        toast.success(json.message);
+        toast.success(json.message || "Form submitted successfully");
         setStep(0);
         setFormData({ name: "", phone: "", address: "", standee_type: "", other_icons: "" });
-        setLogoFile(null);
         setIcons([]);
+        setLogoFile(null);
+        setUpiQR(null);
+        setErrors({});
       } else {
         toast.error(json.message || "Submission failed");
       }
@@ -115,84 +116,76 @@ export default function StepperForm() {
       toast.error("Network error");
     }
   };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 p-4 flex items-center justify-center">
       <div className="max-w-3xl w-full p-6 bg-white/70 backdrop-blur-md shadow-xl rounded-xl">
-        <h2 className="text-3xl font-bold text-center text-blue-800 mb-6">
-          Apply For The Standee Design
-        </h2>
+        <h2 className="text-3xl font-bold text-center text-blue-800 mb-6">Apply For The Standee Design</h2>
 
+        {/* Step Indicators */}
         <div className="flex justify-between mb-8">
           {steps.map((label, i) => (
             <div key={i} className="flex-1 text-center">
               <div
                 className={`mx-auto mb-2 h-10 w-10 rounded-full border-2 flex items-center justify-center ${
-                  i === step
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "border-gray-300 text-gray-600"
+                  i === step ? "bg-blue-600 text-white border-blue-600" : "border-gray-300 text-gray-600"
                 }`}
               >
                 {i + 1}
               </div>
-              <p
-                className={`text-sm ${
-                  i === step ? "font-semibold text-blue-700" : "text-gray-500"
-                }`}
-              >
-                {label}
-              </p>
+              <p className={`text-sm ${i === step ? "font-semibold text-blue-700" : "text-gray-500"}`}>{label}</p>
             </div>
           ))}
         </div>
 
-        <div className="space-y-4">
-          {step === 0 && (
-            <>
-              <h3 className="text-xl font-semibold mb-2">Step 1: General Info</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Form Steps */}
+        {step === 0 && (
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold mb-2">Step 1: General Info</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
                 <input
                   type="text"
                   name="name"
                   placeholder="Full Name"
-                  required
-                  className="border p-2 rounded"
+                  value={formData.name}
                   onChange={handleChange}
+                  className="border p-2 rounded w-full"
                 />
+                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+              </div>
+              <div>
                 <input
                   type="text"
                   name="phone"
                   placeholder="WhatsApp Number"
-                  required
-                  className="border p-2 rounded"
+                  value={formData.phone}
                   onChange={handleChange}
+                  className="border p-2 rounded w-full"
                 />
-                <input
-                  type="text"
-                  name="address"
-                  placeholder="Address"
-                  className="border p-2 rounded"
-                  onChange={handleChange}
-                />
+                {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
               </div>
+            </div>
+            <input
+              type="text"
+              name="address"
+              placeholder="Address (optional)"
+              value={formData.address}
+              onChange={handleChange}
+              className="border p-2 rounded w-full"
+            />
 
-              <label className="block font-medium mb-1 mt-4 text-blue-700">
-                Upload Your Logo (Required)
-              </label>
-              <p className="text-sm text-gray-600 mb-2">
-                Please select the logo image you want to include in your standee.
-              </p>
+            <div>
+              <label className="block font-medium mb-1 mt-4 text-blue-700">Upload Your Logo (Required)</label>
               <input
                 type="file"
                 accept="image/*"
-                required
                 className="border p-2 rounded w-full"
                 onChange={(e) => {
                   const file = e.target.files[0];
                   if (file) {
-                    console.log("[Logo File Selected]", file);
                     if (!file.type.startsWith("image/")) {
                       toast.warn("Only image files are allowed");
-                      console.warn("[File Type Error] Not an image:", file.type);
                       return;
                     }
                     setTempLogoFile(file);
@@ -201,144 +194,108 @@ export default function StepperForm() {
                   }
                 }}
               />
-            </>
-          )}
+              {errors.logo && <p className="text-red-500 text-sm mt-1">{errors.logo}</p>}
+            </div>
 
-          {step === 1 && (
-            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-              <h3 className="text-xl font-semibold mb-2">Step 2: Standee Details</h3>
+            <div className="flex justify-end pt-6">
+              <button
+                type="button"
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                onClick={handleNext}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
 
+        {step === 1 && (
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            <h3 className="text-xl font-semibold mb-2">Step 2: Standee Details</h3>
+
+            <div>
               <select
                 name="standee_type"
-                required
-                className="border p-2 rounded w-full"
+                value={formData.standee_type}
                 onChange={handleChange}
+                className="border p-2 rounded w-full"
               >
                 <option value="">Select Standee Type</option>
-                {[
-                  "1 QR Standee",
-                  "2 QR Standee",
-                  "3 QR Standee",
-                  "4 QR Standee",
-                  "5 QR Standee",
-                  "6 QR Standee",
-                  "7 QR Standee",
-                  "8 QR Standee",
-                  "3 QR Hrzntl Standee",
-                  "4 QR Hrzntl Standee",
-                  "5 QR Hrzntl Standee",
-                  "Business Card",
-                  "VCard",
-                  "VCard 2 QR",
-                ].map((s) => (
-                  <option key={s}>{s}</option>
+                {["1 QR Standee", "2 QR Standee", "3 QR Standee", "4 QR Standee", "5 QR Standee", "6 QR Standee", "7 QR Standee", "8 QR Standee", "3 QR Hrzntl Standee", "4 QR Hrzntl Standee", "5 QR Hrzntl Standee", "Business Card", "VCard", "VCard 2 QR"].map((s) => (
+                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
+              {errors.standee_type && <p className="text-red-500 text-sm mt-1">{errors.standee_type}</p>}
+            </div>
 
-              {getIconLimit() && (
-                <p className="text-sm text-blue-600 mt-1">
-                  You can choose up to {getIconLimit()} icon
-                  {getIconLimit() > 1 ? "s" : ""}.
-                </p>
-              )}
+            {getIconLimit() && (
+              <p className="text-sm text-blue-600 mt-1">
+                You can choose up to {getIconLimit()} icon{getIconLimit() > 1 ? "s" : ""}.
+              </p>
+            )}
 
-              {shouldShowIcons() && (
-                <>
-                  <div>
-                    <label className="block font-medium mb-1">Select Icons:</label>
-                    <p className="text-sm text-gray-500 mb-2">
-                      Selected {icons.length} icon(s)
-                      {getIconLimit() ? ` out of max ${getIconLimit()}` : ""}.
-                    </p>
-                    <div className="flex flex-wrap gap-4">
-                      {[
-                        "Google",
-                        "Instagram",
-                        "UPI",
-                        "Facebook",
-                        "YouTube",
-                        "Whatsapp",
-                        "Website",
-                        "justdial",
-                      ].map((icon) => (
-                        <label
-                          key={icon}
-                          className="inline-flex items-center gap-2 cursor-pointer hover:text-blue-700 transition"
-                        >
-                          <input
-                            type="checkbox"
-                            value={icon}
-                            onChange={handleIconChange}
-                            checked={icons.includes(icon)}
-                            disabled={
-                              getIconLimit() !== null &&
-                              !icons.includes(icon) &&
-                              icons.length >= getIconLimit()
-                            }
-                          />
-                          {icon}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {icons.includes("UPI") && (
-                    <div>
-                      <label className="block font-medium mb-1 mt-2">
-                        Upload UPI QR Code (optional):
-                      </label>
+            {shouldShowIcons() && (
+              <div>
+                <label className="block font-medium mb-1">Select Icons:</label>
+                <p className="text-sm text-gray-500 mb-2">Selected {icons.length} icon(s)</p>
+                <div className="flex flex-wrap gap-4">
+                  {["Google", "Instagram", "UPI", "Facebook", "YouTube", "Whatsapp", "Website", "justdial"].map((icon) => (
+                    <label key={icon} className="inline-flex items-center gap-2 cursor-pointer">
                       <input
-                        type="file"
-                        accept="image/*"
-                        className="border p-2 rounded w-full"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          console.log("[UPI QR File Selected]", file);
-                          setUpiQR(file);
-                        }}
+                        type="checkbox"
+                        value={icon}
+                        onChange={handleIconChange}
+                        checked={icons.includes(icon)}
+                        disabled={
+                          getIconLimit() !== null &&
+                          !icons.includes(icon) &&
+                          icons.length >= getIconLimit()
+                        }
                       />
-                    </div>
-                  )}
+                      {icon}
+                    </label>
+                  ))}
+                </div>
 
-                  <input
-                    type="text"
-                    name="other_icons"
-                    placeholder="Other icons (optional)"
-                    className="border p-2 rounded w-full"
-                    onChange={handleChange}
-                  />
-                </>
-              )}
+                {icons.includes("UPI") && (
+                  <div className="mt-4">
+                    <label className="block font-medium mb-1">Upload UPI QR Code (optional)</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="border p-2 rounded w-full"
+                      onChange={(e) => setUpiQR(e.target.files[0])}
+                    />
+                  </div>
+                )}
 
-              <div className="flex justify-between pt-6">
-                <button
-                  type="button"
-                  className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400 transition"
-                  onClick={handleBack}
-                >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-                >
-                  Submit
-                </button>
+                <input
+                  type="text"
+                  name="other_icons"
+                  value={formData.other_icons}
+                  placeholder="Other icons (optional)"
+                  className="border p-2 rounded w-full mt-2"
+                  onChange={handleChange}
+                />
               </div>
-            </form>
-          )}
-        </div>
+            )}
 
-        {step < 1 && (
-          <div className="flex justify-end pt-6">
-            <button
-              type="button"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-              onClick={handleNext}
-            >
-              Next
-            </button>
-          </div>
+            <div className="flex justify-between pt-6">
+              <button
+                type="button"
+                className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400 transition"
+                onClick={handleBack}
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+              >
+                Submit
+              </button>
+            </div>
+          </form>
         )}
 
         <ToastContainer position="top-right" autoClose={3000} />
@@ -351,19 +308,12 @@ export default function StepperForm() {
             <p className="mb-2">Are you sure you want to upload this image?</p>
             <p className="text-sm text-gray-600 mb-4">{tempLogoFile?.name}</p>
             {logoPreview && (
-              <Image
-                src={logoPreview}
-                alt="Preview"
-                width={200}
-                height={200}
-                className="mx-auto mb-4 rounded"
-              />
+              <Image src={logoPreview} alt="Preview" width={200} height={200} className="mx-auto mb-4 rounded" />
             )}
             <div className="flex justify-center gap-4">
               <button
                 className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
                 onClick={() => {
-                  console.log("[Logo Upload Confirmed]");
                   setLogoFile(tempLogoFile);
                   setShowConfirmModal(false);
                 }}
@@ -373,7 +323,6 @@ export default function StepperForm() {
               <button
                 className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
                 onClick={() => {
-                  console.warn("[Logo Upload Cancelled]");
                   setTempLogoFile(null);
                   setLogoPreview(null);
                   setShowConfirmModal(false);
