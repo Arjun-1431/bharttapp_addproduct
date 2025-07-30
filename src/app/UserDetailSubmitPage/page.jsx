@@ -135,7 +135,7 @@ export default function StepperForm() {
         </div>
       )}
       <div className="max-w-3xl w-full p-6 bg-white/70 backdrop-blur-md shadow-xl rounded-xl">
-        <h2 className="text-3xl font-bold text-center text-blue-800 mb-6">Apply For The Standee Design...</h2>
+        <h2 className="text-3xl font-bold text-center text-blue-800 mb-6">Apply For The Standee Design:</h2>
 
         {/* Stepper */}
         <div className="flex justify-between mb-8">
